@@ -2,6 +2,9 @@
  * Sleeping Barber Problem (2 barbers)
  * Avi Ginsberg (s0753107)
  * CS-438-50
+ * 
+ * This program was adapted from the source code found at: http://www.cs.helsinki.fi/u/kerola/rio/ohjeet/Java/semaphores/s06e-huhtamaki-merikanto-nevalainen/SleepingBarber.java
+ * It has been altered to support 2 barbers and also to correctly handle customer behavior. The original had all customers go directly to the waiting room without first checking on the barber. This version makes the customers check the barber and only go to the waiting room if the barber is busy. 
  */
 import java.util.concurrent.*;
 import java.util.*;
@@ -9,9 +12,7 @@ import java.util.*;
 
 public class SleepingBarber extends Thread {
 
-  /* PREREQUISITES */
-
-
+ 
   /* we create the semaphores. First there are no customers and 
    the barber is asleep so we call the constructor with parameter
    0 thus creating semaphores with zero initial permits. 
