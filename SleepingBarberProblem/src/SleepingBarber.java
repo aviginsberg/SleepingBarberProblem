@@ -7,7 +7,7 @@
  * It has been altered to support 2 barbers and also to correctly handle customer behavior. The original had all customers go directly to the waiting room without first checking on the barber. This version makes the customers check the barber and only go to the waiting room if the barber is busy. 
  */
 import java.util.concurrent.*;
-import java.util.*;
+import java.util.ArrayList;
 
 
 public class SleepingBarber extends Thread {
@@ -22,21 +22,27 @@ public class SleepingBarber extends Thread {
     public static Semaphore barber = new Semaphore(0);
     public static Semaphore accessSeats = new Semaphore(1);
 
-  /* we denote that the number of chairs in this barbershop is 5. */
+  /* set our number of chairs, barbers, and customers. number of barbers should ONLY be 1 or 2.*/
 
     public static final int CHAIRS = 5;
     public static final int NumOfBarbers = 2;
+    public static final int NumOfCustomers = 20;
+    
+  /* Speed settings */
+    public static final int CustomerEntrySpeed = 500;
+    public static final int HaircutSpeed = 5000;
 
   /* we create the integer numberOfFreeSeats so that the customers
    can either sit on a free seat or leave the barbershop if there
    are no seats available */
 
    public static int numberOfFreeSeats = CHAIRS;
-  // public static boolean justTookNewCust=false;
+
    public static int justTookNewCust=0;
    
-   //public static Queue<Integer> WaitingRoomQueue = new LinkedList<Integer>();
    public static ArrayList<Integer> WaitingRoomList = new ArrayList<Integer>();
+   
+   public static int CustomersLeftBecauseFull=0;
    
    
 /* THE CUSTOMER THREAD */
@@ -99,6 +105,9 @@ class Customer extends Thread {
 		      }   
 	      else  {  // there are no free seats
 	        System.out.println("There are no free seats in the waiting room. Customer " + this.iD + " has left the barbershop.");
+	        CustomersLeftBecauseFull++;
+	        System.out.println(">>> "+CustomersLeftBecauseFull + " customers have tried to sit in the waiting room but left because it was full.");
+
 	        accessSeats.release();  //release the lock on the seats
 	        notCut=false; // the customer will leave since there are no spots in the queue left.
 	      }
@@ -129,6 +138,9 @@ class Customer extends Thread {
 	      }   
       else  {  // there are no free seats
         System.out.println("There are no free seats in the waiting room. Customer " + this.iD + " has left the barbershop.");
+        CustomersLeftBecauseFull++;
+        System.out.println(">>> "+CustomersLeftBecauseFull + " customers have tried to sit in the waiting room but left because it was full.");
+
         accessSeats.release();  //release the lock on the seats
         notCut=false; // the customer will leave since there are no spots in the queue left.
       }
@@ -136,6 +148,7 @@ class Customer extends Thread {
       catch (InterruptedException ex) {}
     }
     }
+
   }
 
   /* this method will simulate getting a hair-cut */
@@ -143,8 +156,7 @@ class Customer extends Thread {
   public void get_haircut(){
     System.out.println("Customer " + this.iD + " is getting his hair cut.");
     try {
-    sleep(5050);
-    //System.out.println("Customer" + this.iD + "'s haircut is finished. He has left the barber shop.");
+    sleep(HaircutSpeed);
     justTookNewCust--;
     } catch (InterruptedException ex) {}
   }
@@ -186,7 +198,7 @@ class Barber extends Thread {
   public void cutHair(){
     System.out.println("Barber " +this.bname+ " is cutting hair.");
     try {
-      sleep(6050);
+      sleep(HaircutSpeed);
       //barber.release();
      // System.out.println("Barber "+this.bname+" has finished cutting hair and is ready to cut a new customer.");
       
@@ -206,20 +218,35 @@ class Barber extends Thread {
     barberShop.start();  // Let the simulation begin
   }
 
-  public void run(){   
-   Barber giovanni = new Barber("Giovanni");  //Giovanni is the best barber ever 
-   Barber tim = new Barber("Tim");
-   giovanni.start();  //Ready for another day of work
-   tim.start();
-
+  @SuppressWarnings("unused")
+public void run(){   
+	  
+	  System.out.println("-------------------------------------");
+	  System.out.println("| Avi's Wonderful Sleepy Barbershop |\n| Current settings:                 |");
+	  System.out.println("| Number of Barbers: "+NumOfBarbers+"              |");
+	  System.out.println("| Number of Customers: "+NumOfCustomers+"           |");
+	  System.out.println("| Number of Waiting Room Chairs : "+ CHAIRS+" |");
+	  System.out.println("| Customer entry speed(ms): "+CustomerEntrySpeed+"    |");
+	  System.out.println("| Haircut speed(ms): "+HaircutSpeed+"           |");
+	  System.out.println("-------------------------------------\n\n");
+ 
+   if(NumOfBarbers>1){
+	   Barber giovanni = new Barber("Giovanni");  //Giovanni is the best barber ever 
+	   Barber tim = new Barber("Tim");
+	   giovanni.start();  //Ready for another day of work
+	   tim.start();
+   }else{
+	   Barber giovanni = new Barber("Giovanni");  //Giovanni is the best barber ever 
+	   giovanni.start();  //Ready for another day of work
+   }
 
    /* This method will create new customers for a while */
     
-   for (int i=1; i<21; i++) {
+   for (int i=1; i<NumOfCustomers+1; i++) {
      Customer aCustomer = new Customer(i);
      aCustomer.start();
      try {
-       sleep(2000);
+       sleep(CustomerEntrySpeed);
      } catch(InterruptedException ex) {};
    }
   } 
